@@ -403,13 +403,13 @@ module.exports = function(schema, option) {
           }
 
           Object.keys(schema.lifeCycles).forEach((name) => {
-            const vueLifeCircleName = lifeCycleMap[name] || name;
+            const ngLifeCircleName = lifeCycleMap[name] || name;
             const { params, content } = parseFunction(schema.lifeCycles[name]);
 
             if (name === '_constructor') {
-              lifeCycles.push(`${vueLifeCircleName}() {${content} ${init.join('\n')}}`);
+              lifeCycles.push(`${ngLifeCircleName}() {${content} ${init.join('\n')}}`);
             } else {
-              lifeCycles.push(`${vueLifeCircleName}() {${content}}`);
+              lifeCycles.push(`${ngLifeCircleName}() {${content}}`);
             }
           });
         }
