@@ -40,10 +40,11 @@ export class IndexComponent implements OnInit,OnDestroy {
   constructor() { }
 
   ngOnDestroy(): void {
-    throw new Error('Method not implemented.');
+
   }
+
   ngOnInit(): void {
-    throw new Error('Method not implemented.');
+    
   }
 
   isReadCountShow(readCount) {
@@ -66,7 +67,6 @@ export class IndexComponent implements OnInit,OnDestroy {
   }
 
   dataHandler(dataMap) {
-    console.log('dataHandler 11');
     return dataMap;
   }
 
