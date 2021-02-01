@@ -432,7 +432,7 @@ module.exports = function(schema, option) {
   datas.push(`constants: ${toString(constants)}`);
 
   const prettierOpt = {
-    parser: 'vue',
+    parser: 'angular',
     printWidth: 80,
     singleQuote: true
   };
@@ -449,7 +449,7 @@ module.exports = function(schema, option) {
         `,
           prettierOpt
         ),
-        panelType: 'ts'
+        panelType: 'js'
       },
       {
         panelName: 'index.components.less',
