@@ -22,7 +22,7 @@ module.exports = {
     "componentName": "Div",
     "props": {
       "onClick": function onClick(e) {
-        window.open(this.item.url, '_blank')
+        window.open(e.url, '_blank')
       },
       "data-url": "{{this.item.url}}",
       "key": "{{this.item.index}}"
@@ -378,41 +378,12 @@ module.exports = {
     "_constructor": function constructor(props, context) {
       console.log('super props');
     },
-    "componentDidUpdate": (prevProps, prevState, snapshot) => {
-      
+    "ngOnInit": function ngOnInit(){
+      console.log('ngOnInit props');
+    },
+    "ngOnDestroy": function ngOnDestroy(){
+      console.log('ngOnDestroy props');
     }
-  },
-  "dataSource": {
-    "list": [{
-      "id": "fetch_example",
-      "isInit": true,
-      "type": "fetch",
-      "options": {
-        "method": "GET",
-        "uri": "https://jsonplaceholder.typicode.com/todos/1",
-        "headers": {
-          "Content-Type": "json"
-        }
-      },
-      "dataHandler": function dataHandler(data, error) {
-        console.log('fetch example: ', data, error)
-        return data;
-      }
-    }, {
-      "id": "jsonp_example",
-      "isInit": true,
-      "type": "jsonp",
-      "options": {
-        "method": "GET",
-        "params": {},
-        "uri": "https://assets.airbnb.com/frontend/search_results.js",
-        "jsonpCallbackFunction": "search_results"
-      },
-      "dataHandler": function dataHandler(data, error) {
-        console.log('jsonp example: ', data, error)
-        return data;
-      }
-    }]
   },
   "state": {
     "data": [{

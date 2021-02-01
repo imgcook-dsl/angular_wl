@@ -1,18 +1,39 @@
 {
   "name": "@imgcook/dsl-template",
+  "scripts": {
+    "test": "node ./test/index.js"
+  },
+  "dependencies": {
+    "whatwg-fetch": "^3.5.0",
+    "@angular/animations": "^8.0.0",
+    "@angular/cdk": "^8.2.3",
+    "@angular/common": "^8.0.0",
+    "@angular/compiler": "^8.0.0",
+    "@angular/core": "^8.0.0",
+    "@angular/forms": "^8.0.0",
+    "@types/dragula": "^3.7.0",
+    "@types/webpack-env": "^1.16.0"
+  },
   "devDependencies": {
     "@imgcook/dsl-helper": "^0.0.1-alpha.0",
+    "@angular-devkit/architect": "~0.803.20",
+    "@angular-devkit/build-angular": "~0.803.20",
+    "@angular-devkit/core": "~8.3.20",
+    "@angular-devkit/schematics": "~8.3.20",
+    "@angular/cli": "^8.0.0",
+    "@angular/compiler-cli": "^8.0.0",
+    "@angular/language-service": "^8.0.0",
+    "@types/jasmine": "~3.3.8",
+    "@types/jasminewd2": "~2.0.3",
+    "@types/node": "^8.10.66",
     "co": "^4.6.0",
     "fs-extra": "^8.0.1",
-    "lodash": "^4.17.19",
+    "lodash": "^4.17.11",
     "prettier": "^1.11.1",
     "thunkify": "^2.1.2",
     "vm2": "^3.5.2",
     "xml-beautifier": "^0.4.0",
     "xtemplate": "^4.6.1",
     "xtpl": "^3.4.0"
-  },
-  "scripts": {
-    "test": "node ./test/index.js"
   }
 }

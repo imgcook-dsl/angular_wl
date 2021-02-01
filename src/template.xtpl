@@ -1,13 +1,9 @@
-'use strict';
-
-import React, { Component } from 'react';
+import { Component } from '@angular/core';
 
 {{{imports}}}
 
-{{{utils}}}
-
-{{{style}}}
-
-{{{classes}}}
-
-{{{exports}}}
+@Component({
+  selector: 'app-component',
+  template: {{{template}}},
+  styles: {{{styles.join('\n')}}},
+})
