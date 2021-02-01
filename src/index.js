@@ -455,8 +455,8 @@ module.exports = function(schema, option) {
         panelName: 'index.components.less',
         panelValue: prettier.format(`${styles.join('\n')}`, { parser: 'less' }),
         panelType: 'less'
-      },
-      // {
+      }
+      //, {
       //   panelName: 'index.components.spec.ts',
       //   panelValue: prettier.format(
       //     `
@@ -486,31 +486,31 @@ module.exports = function(schema, option) {
       //   `, prettierOpt),
       //   panelType: 'ts'
       // },
-      {
-        panelName: 'index.components.ts',
-        panelValue: prettier.format(
-            `
-            import {Component, OnInit, OnDestroy} from '@angular/core';
+      // {
+      //   panelName: 'index.components.ts',
+      //   panelValue: prettier.format(
+      //       `
+      //       import {Component, OnInit, OnDestroy} from '@angular/core';
 
-            @Component({
-              selector: 'app-index',
-              templateUrl: './index.component.html',
-              styleUrls: ['./index.component.less']
-            })
-            export class IndexComponent implements OnInit, OnDestroy {
+      //       @Component({
+      //         selector: 'app-index',
+      //         templateUrl: './index.component.html',
+      //         styleUrls: ['./index.component.less']
+      //       })
+      //       export class IndexComponent implements OnInit, OnDestroy {
 
-              ${datas.join(',\n')}
+      //         ${datas.join(',\n')}
             
-              ${lifeCycles.join('\n')}
+      //         ${lifeCycles.join('\n')}
 
-              ${methods.join('\n')}
+      //         ${methods.join('\n')}
             
-            }
-          `,
-            prettierOpt
-        ),
-        panelType: 'ts'
-      }
+      //       }
+      //     `,
+      //       prettierOpt
+      //   ),
+      //   panelType: 'ts'
+      // }
     ],
     renderData: {
       template: template,
