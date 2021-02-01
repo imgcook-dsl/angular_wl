@@ -456,36 +456,36 @@ module.exports = function(schema, option) {
         panelValue: prettier.format(`${styles.join('\n')}`, { parser: 'less' }),
         panelType: 'less'
       },
-      {
-        panelName: 'index.components.spec.ts',
-        panelValue: prettier.format(
-          `
-          import { async, ComponentFixture, TestBed } from '@angular/core/testing';
-          import { IndexComponent } from './index.component';
+      // {
+      //   panelName: 'index.components.spec.ts',
+      //   panelValue: prettier.format(
+      //     `
+      //     import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+      //     import { IndexComponent } from './index.component';
 
-          describe('IndexComponent', () => {
-            let component: IndexComponent;
-            let fixture: ComponentFixture<IndexComponent>;
+      //     describe('IndexComponent', () => {
+      //       let component: IndexComponent;
+      //       let fixture: ComponentFixture<IndexComponent>;
 
-            beforeEach(async(() => {
-              TestBed.configureTestingModule({
-                declarations: [ IndexComponent ]
-              }).compileComponents();
-            }));
+      //       beforeEach(async(() => {
+      //         TestBed.configureTestingModule({
+      //           declarations: [ IndexComponent ]
+      //         }).compileComponents();
+      //       }));
 
-            beforeEach(() => {
-              fixture = TestBed.createComponent(IndexComponent);
-              component = fixture.componentInstance;
-              fixture.detectChanges();
-            });
+      //       beforeEach(() => {
+      //         fixture = TestBed.createComponent(IndexComponent);
+      //         component = fixture.componentInstance;
+      //         fixture.detectChanges();
+      //       });
 
-            it('should create', () => {
-              expect(component).toBeTruthy();
-            });
-          });
-        `, prettierOpt),
-        panelType: 'ts'
-      },
+      //       it('should create', () => {
+      //         expect(component).toBeTruthy();
+      //       });
+      //     });
+      //   `, prettierOpt),
+      //   panelType: 'ts'
+      // },
       {
         panelName: 'index.components.ts',
         panelValue: prettier.format(
