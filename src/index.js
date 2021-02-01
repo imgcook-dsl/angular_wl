@@ -1,86 +1,33 @@
-module.exports = function(schema, option) {
-  const { _, prettier } = option;
 
-  // template
-  const template = [];
+const nameMapping = {
+  'page': 'View',
+  'text': 'Text',
+  'div': 'View',
+  'image': 'Image',
+  'block': 'View'
+}
+
+module.exports = function (schema, option) {
+  const { prettier } = option;
 
   // imports
   const imports = [];
 
+  // inline style
+  const style = {};
+
   // Global Public Functions
   const utils = [];
 
-  // data
-  const datas = [];
+  // Classes 
+  const classes = [];
 
-  const constants = {};
-
-  // methods
-  const methods = [];
-
-  const expressionName = [];
-
-  // lifeCycles
-  const lifeCycles = [];
-
-  // styles
-  const styles = [];
-
-  const styles4vw = [];
-
-  const styles4rem = [];
-
-  // box relative style
-  const boxStyleList = [
-    'fontSize',
-    'marginTop',
-    'marginBottom',
-    'paddingTop',
-    'paddingBottom',
-    'height',
-    'top',
-    'bottom',
-    'width',
-    'maxWidth',
-    'left',
-    'right',
-    'paddingRight',
-    'paddingLeft',
-    'marginLeft',
-    'marginRight',
-    'lineHeight',
-    'borderBottomRightRadius',
-    'borderBottomLeftRadius',
-    'borderTopRightRadius',
-    'borderTopLeftRadius',
-    'borderRadius'
-  ];
-
-  // no unit style
-  const noUnitStyles = [ 'opacity', 'fontWeight' ];
-
-  const lifeCycleMap = {
-    _constructor: 'constructor',
-    ngOnInit: 'ngOnInit',
-    ngOnDestroy: 'ngOnDestroy'
-  };
-
-  const width = option.responsive.width || 750;
-  const viewportWidth = option.responsive.viewportWidth || 375;
-  const htmlFontsize = viewportWidth ? viewportWidth / 10 : null;
-
-  // 1vw = width / 100
-  const _w = width / 100;
-
-  const _ratio = width / viewportWidth;
+  // import 组件名称列表
+  const componentNames = {};
 
   const isExpression = (value) => {
     return /^\{\{.*\}\}$/.test(value);
-  };
-
-  const transformEventName = (name) => {
-    return name.replace('on', '').toLowerCase();
-  };
+  }
 
   const toString = (value) => {
     if ({}.toString.call(value) === '[object Function]') {
@@ -96,60 +43,64 @@ module.exports = function(schema, option) {
         } else {
           return value;
         }
-      });
+      })
     }
 
     return String(value);
   };
 
   // convert to responsive unit, such as vw
-  const parseStyle = (style, option = {}) => {
-    const { toVW, toREM } = option;
-    const styleData = [];
+  const parseStyle = (style, type) => {
+    const parsedStyles = [];
+    const exceptRnStyles = [];
+
     for (let key in style) {
-      let value = style[key];
-      if (boxStyleList.indexOf(key) != -1) {
-        if (toVW) {
-          value = (parseInt(value) / _w).toFixed(2);
-          value = value == 0 ? value : value + 'vw';
-        } else if (toREM && htmlFontsize) {
-          const valueNum = typeof value == 'string' ? value.replace(/(px)|(rem)/, '') : value;
-          const fontSize = (valueNum * (viewportWidth / width)).toFixed(2);
-          value = parseFloat((fontSize / htmlFontsize).toFixed(2));
-          value =  value ? `${value}rem` : value;
-        } else {
-          value = parseInt(value).toFixed(2);
-          value = value == 0 ? value : value + 'px';
-        }
-        styleData.push(`${_.kebabCase(key)}: ${value}`);
-      } else if (noUnitStyles.indexOf(key) != -1) {
-        styleData.push(`${_.kebabCase(key)}: ${parseFloat(value)}`);
-      } else {
-        styleData.push(`${_.kebabCase(key)}: ${value}`);
+      const name = key.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLocaleLowerCase();
+      const value = style[key];
+
+      if (type === 'text' && (key === 'width' || key === 'height')) {
+        continue;
+      }
+
+      switch (key) {
+        case 'whiteSpace':
+        case 'boxSizing':
+        case 'backgroundImage':
+        case 'borderBottomStyle':
+        case 'textOverflow':
+        case 'visibility':
+        case 'filter':
+          exceptRnStyles.push(`${name}: ${value}`);
+          break;
+        default:
+          parsedStyles.push(`${name}: ${value}`);
       }
     }
-    return styleData.join(';');
-  };
+
+    if (exceptRnStyles.length > 0) {
+      exceptRnStyles.unshift('\n/*  #ifndef rn */\n');
+      exceptRnStyles.push('\n/*  #endif */\n');
+    }
+    return parsedStyles.concat(exceptRnStyles);
+  }
 
   // parse function, return params and content
   const parseFunction = (func) => {
     const funcString = func.toString();
-    const name = funcString.slice(funcString.indexOf('function'), funcString.indexOf('(')).replace('function ', '');
     const params = funcString.match(/\([^\(\)]*\)/)[0].slice(1, -1);
     const content = funcString.slice(funcString.indexOf('{') + 1, funcString.lastIndexOf('}'));
     return {
       params,
-      content,
-      name
+      content
     };
-  };
+  }
 
   // parse layer props(static values or expression)
-  const parseProps = (value, isReactNode, constantName) => {
+  const parseProps = (value, isReactNode) => {
     if (typeof value === 'string') {
       if (isExpression(value)) {
         if (isReactNode) {
-          return `{{${value.slice(7, -2)}}}`;
+          return value.slice(1, -1);
         } else {
           return value.slice(2, -2);
         }
@@ -157,32 +108,14 @@ module.exports = function(schema, option) {
 
       if (isReactNode) {
         return value;
-      } else if (constantName) {
-        // save to constant
-        expressionName[constantName] = expressionName[constantName] ? expressionName[constantName] + 1 : 1;
-        const name = `${constantName}${expressionName[constantName]}`;
-        constants[name] = value;
-        return `"constants.${name}"`;
       } else {
-        return `"${value}"`;
+        return `'${value}'`;
       }
     } else if (typeof value === 'function') {
-      const { params, content, name } = parseFunction(value);
-      expressionName[name] = expressionName[name] ? expressionName[name] + 1 : 1;
-      methods.push(`${name}_${expressionName[name]}(${params}) {${content}}`);
-      return `${name}_${expressionName[name]}`;
-    } else {
-      return `"${value}"`;
+      const { params, content } = parseFunction(value);
+      return `(${params}) => {${content}}`;
     }
-  };
-
-  const parsePropsKey = (key, value) => {
-    if (typeof value === 'function') {
-      return `@${transformEventName(key)}`;
-    } else {
-      return `:${key}`;
-    }
-  };
+  }
 
   // parse async dataSource
   const parseDataSource = (data) => {
@@ -209,16 +142,14 @@ module.exports = function(schema, option) {
     }
 
     Object.keys(data.options).forEach((key) => {
-      if ([ 'uri', 'method', 'params' ].indexOf(key) === -1) {
+      if (['uri', 'method', 'params'].indexOf(key) === -1) {
         payload[key] = toString(data.options[key]);
       }
     });
 
     // params parse should in string template
     if (params) {
-      payload = `${toString(payload).slice(0, -1)} ,body: ${isExpression(params)
-        ? parseProps(params)
-        : toString(params)}}`;
+      payload = `${toString(payload).slice(0, -1)} ,body: ${isExpression(params) ? parseProps(params) : toString(params)}}`;
     } else {
       payload = toString(payload);
     }
@@ -234,23 +165,22 @@ module.exports = function(schema, option) {
         .catch((e) => {
           console.log('error', e);
         })
-      `;
+      `
     }
 
     result += '}';
 
     return `${name}() ${result}`;
-  };
+  }
 
   // parse condition: whether render the layer
   const parseCondition = (condition, render) => {
-    let _condition = isExpression(condition) ? condition.slice(2, -2) : condition;
-    if (typeof _condition === 'string') {
-      _condition = _condition.replace('this.', '');
+    if (typeof condition === 'boolean') {
+      return `${condition} && ${render}`
+    } else if (typeof condition === 'string') {
+      return `${condition.slice(2, -2)} && ${render}`
     }
-    render = render.replace(/^<\w+\s/, `${render.match(/^<\w+\s/)[0]} v-if="${_condition}" `);
-    return render;
-  };
+  }
 
   // parse loop render
   const parseLoop = (loop, loopArg, render) => {
@@ -259,100 +189,78 @@ module.exports = function(schema, option) {
     let loopArgIndex = (loopArg && loopArg[1]) || 'index';
 
     if (Array.isArray(loop)) {
-      data = 'loopData';
-      datas.push(`${data}: ${toString(loop)}`);
+      data = toString(loop);
     } else if (isExpression(loop)) {
-      data = loop.slice(2, -2).replace('this.state.', '');
+      data = loop.slice(2, -2);
     }
-    // add loop key
-    const tagEnd = render.indexOf('>');
-    const keyProp = render.slice(0, tagEnd).indexOf('key=') == -1 ? `:key="${loopArgIndex}"` : '';
-    render = `
-      ${render.slice(0, tagEnd)}
-      v-for="(${loopArgItem}, ${loopArgIndex}) in ${data}"  
-      ${keyProp}
-      ${render.slice(tagEnd)}`;
 
-    // remove `this`
-    const re = new RegExp(`this.${loopArgItem}`, 'g');
+    // add loop key
+    const tagEnd = render.match(/^<.+?\s/)[0].length;
+    render = `${render.slice(0, tagEnd)} key={${loopArgIndex}}${render.slice(tagEnd)}`;
+
+    // remove `this` 
+    const re = new RegExp(`this.${loopArgItem}`, 'g')
     render = render.replace(re, loopArgItem);
 
-    return render;
-  };
+    return `${data}.map((${loopArgItem}, ${loopArgIndex}) => {
+      return (${render});
+    })`;
+  }
 
   // generate render xml
   const generateRender = (schema) => {
     const type = schema.componentName.toLowerCase();
     const className = schema.props && schema.props.className;
-    const classString = className ? ` class="${className}"` : '';
+    const classString = className ? ` className='${className}'` : '';
 
     if (className) {
-      styles.push(`
-        .${className} {
-          ${parseStyle(schema.props.style)}
-        }
-      `);
-      styles4vw.push(`
-        .${className} {
-          ${parseStyle(schema.props.style, { toVW: true })}
-        }
-      `);
-      styles4rem.push(`
-        .${className} {
-          ${parseStyle(schema.props.style, { toREM: true })}
-        }
-      `);
+      style[className] = parseStyle(schema.props.style, type);
     }
+
+    componentNames[nameMapping[type]] = true;
 
     let xml;
     let props = '';
 
     Object.keys(schema.props).forEach((key) => {
-      if ([ 'className', 'style', 'text', 'src', 'lines' ].indexOf(key) === -1) {
-        props += ` ${parsePropsKey(key, schema.props[key])}=${parseProps(schema.props[key])}`;
+      if (['className', 'style', 'text', 'src'].indexOf(key) === -1) {
+        props += ` ${key}={${parseProps(schema.props[key])}}`;
       }
-    });
+    })
+
+    // 设置标签类型
     switch (type) {
       case 'text':
         const innerText = parseProps(schema.props.text, true);
-        xml = `<span${classString}${props}>${innerText}</span> `;
+        xml = `<${nameMapping[type]}${classString}${props}>${innerText}</${nameMapping[type]}>`;
         break;
       case 'image':
-        let source = parseProps(schema.props.src, false);
-        if (!source.match('"')) {
-          source = `"${source}"`;
-          xml = `<img${classString}${props} :src=${source} /> `;
-        } else {
-          xml = `<img${classString}${props} src=${source} /> `;
-        }
+        const source = parseProps(schema.props.src);
+        xml = `<${nameMapping[type]}${classString}${props} src={require(${source})} />`;
         break;
       case 'div':
       case 'page':
       case 'block':
-      case 'component':
         if (schema.children && schema.children.length) {
-          xml = `<div${classString}${props}>${transform(schema.children)}</div>`;
+          xml = `<${nameMapping[type]}${classString}${props}>${transform(schema.children)}</${nameMapping[type]}>`;
         } else {
-          xml = `<div${classString}${props} />`;
+          xml = `<${nameMapping[type]}${classString}${props} />`;
         }
         break;
-      default:
-        if (schema.children && schema.children.length) {
-          xml = `<div${classString}${props}>${transform(schema.children)}</div>`;
-        } else {
-          xml = `<div${classString}${props} />`;
-        }
     }
 
     if (schema.loop) {
-      xml = parseLoop(schema.loop, schema.loopArgs, xml);
+      xml = parseLoop(schema.loop, schema.loopArgs, xml)
     }
     if (schema.condition) {
       xml = parseCondition(schema.condition, xml);
-      // console.log(xml);
     }
-    return xml || '';
-  };
+    if (schema.loop || schema.condition) {
+      xml = `{${xml}}`;
+    }
+
+    return xml;
+  }
 
   // parse schema
   const transform = (schema) => {
@@ -365,12 +273,17 @@ module.exports = function(schema, option) {
     } else {
       const type = schema.componentName.toLowerCase();
 
-      if ([ 'page', 'block', 'component' ].indexOf(type) !== -1) {
+      if (['page', 'block'].indexOf(type) !== -1) {
         // 容器组件处理: state/method/dataSource/lifeCycle/render
+        const states = [];
+        const lifeCycles = [];
+        const methods = [];
         const init = [];
+        const render = [`render(){ return (`];
+        let classData = [`class Index extends Component {`];
 
         if (schema.state) {
-          datas.push(`${toString(schema.state).slice(1, -1)}`);
+          states.push(`state = ${toString(schema.state)}`);
         }
 
         if (schema.methods) {
@@ -383,9 +296,9 @@ module.exports = function(schema, option) {
         if (schema.dataSource && Array.isArray(schema.dataSource.list)) {
           schema.dataSource.list.forEach((item) => {
             if (typeof item.isInit === 'boolean' && item.isInit) {
-              init.push(`this.${item.id}();`);
+              init.push(`this.${item.id}();`)
             } else if (typeof item.isInit === 'string') {
-              init.push(`if (${parseProps(item.isInit)}) { this.${item.id}(); }`);
+              init.push(`if (${parseProps(item.isInit)}) { this.${item.id}(); }`)
             }
             methods.push(parseDataSource(item));
           });
@@ -399,25 +312,32 @@ module.exports = function(schema, option) {
 
         if (schema.lifeCycles) {
           if (!schema.lifeCycles['_constructor']) {
-            lifeCycles.push(`${lifeCycleMap['_constructor']}() { ${init.join('\n')}}`);
+            lifeCycles.push(`constructor(props, context) { super(); ${init.join('\n')}}`);
           }
 
           Object.keys(schema.lifeCycles).forEach((name) => {
-            const ngLifeCircleName = lifeCycleMap[name] || name;
             const { params, content } = parseFunction(schema.lifeCycles[name]);
 
             if (name === '_constructor') {
-              lifeCycles.push(`${ngLifeCircleName}() {${content} ${init.join('\n')}}`);
+              lifeCycles.push(`constructor(${params}) { super(); ${content} ${init.join('\n')}}`);
             } else {
-              lifeCycles.push(`${ngLifeCircleName}() {${content}}`);
+              lifeCycles.push(`${name}(${params}) {${content}}`);
             }
           });
         }
-        template.push(generateRender(schema));
+
+        render.push(generateRender(schema))
+        render.push(`);}`);
+
+        classData = classData.concat(states).concat(lifeCycles).concat(methods).concat(render);
+        classData.push('}');
+
+        classes.push(classData.join('\n'));
       } else {
         result += generateRender(schema);
       }
     }
+
     return result;
   };
 
@@ -429,97 +349,48 @@ module.exports = function(schema, option) {
 
   // start parse schema
   transform(schema);
-  datas.push(`constants: ${toString(constants)}`);
 
-  const prettierOpt = {
-    parser: 'angular',
-    printWidth: 80,
-    singleQuote: true
-  };
+
+  // 输出外部类样式
+  function printOuterStyle(style) {
+    let result = '';
+    for (let key in style) {
+      result += `.${key} {
+         ${style[key].join(';')} 
+        } \n`
+    }
+    return result;
+  }
 
   return {
     panelDisplay: [
       {
-        panelName: `index.components.html`,
-        panelValue: prettier.format(
-          `
-          <template>
-              ${template}
-          </template>
-        `,
-          prettierOpt
-        ),
-        panelType: 'js'
+        panelName: `index.jsx`,
+        panelValue: prettier.format(`
+          'use strict';
+          import Taro, { Component } from '@tarojs/taro';
+          import { ${Object.keys(componentNames).join(', ')} } from '@tarojs/components';
+          ${imports.join('\n')}
+          import './index.less';
+          ${utils.join('\n')}
+          ${classes.join('\n')}
+          export default Index;
+        `, {
+          parser: 'babel',
+          printWidth: 120,
+          singleQuote: true
+        }),
+        panelType: 'js',
       },
       {
-        panelName: 'index.components.less',
-        panelValue: prettier.format(`${styles.join('\n')}`, { parser: 'less' }),
+        panelName: `index.less`,
+        panelValue: prettier.format(`${printOuterStyle(style)}`, {
+          parser: 'less',
+          printWidth: 120,
+        }),
         panelType: 'less'
       }
-      //, {
-      //   panelName: 'index.components.spec.ts',
-      //   panelValue: prettier.format(
-      //     `
-      //     import { async, ComponentFixture, TestBed } from '@angular/core/testing';
-      //     import { IndexComponent } from './index.component';
-
-      //     describe('IndexComponent', () => {
-      //       let component: IndexComponent;
-      //       let fixture: ComponentFixture<IndexComponent>;
-
-      //       beforeEach(async(() => {
-      //         TestBed.configureTestingModule({
-      //           declarations: [ IndexComponent ]
-      //         }).compileComponents();
-      //       }));
-
-      //       beforeEach(() => {
-      //         fixture = TestBed.createComponent(IndexComponent);
-      //         component = fixture.componentInstance;
-      //         fixture.detectChanges();
-      //       });
-
-      //       it('should create', () => {
-      //         expect(component).toBeTruthy();
-      //       });
-      //     });
-      //   `, prettierOpt),
-      //   panelType: 'ts'
-      // },
-      // {
-      //   panelName: 'index.components.ts',
-      //   panelValue: prettier.format(
-      //       `
-      //       import {Component, OnInit, OnDestroy} from '@angular/core';
-
-      //       @Component({
-      //         selector: 'app-index',
-      //         templateUrl: './index.component.html',
-      //         styleUrls: ['./index.component.less']
-      //       })
-      //       export class IndexComponent implements OnInit, OnDestroy {
-
-      //         ${datas.join(',\n')}
-            
-      //         ${lifeCycles.join('\n')}
-
-      //         ${methods.join('\n')}
-            
-      //       }
-      //     `,
-      //       prettierOpt
-      //   ),
-      //   panelType: 'ts'
-      // }
     ],
-    renderData: {
-      template: template,
-      imports: imports,
-      datas: datas,
-      methods: methods,
-      lifeCycles: lifeCycles,
-      styles: styles
-    },
     noTemplate: true
   };
-};
+}
